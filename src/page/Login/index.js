@@ -1,12 +1,17 @@
-import React from 'react';
-import { SafeAreaView, View, Text, TextInput, StyleSheet, ImageBackground, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { SafeAreaView, View, Text, TextInput, StyleSheet, ImageBackground, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native'; 
 import bglogin from '../../assets/images/login.png'; 
 import { useFonts, Rubik_700Bold, Rubik_400Regular, Rubik_500Medium } from '@expo-google-fonts/rubik';
 import { AntDesign, FontAwesome } from '@expo/vector-icons';
+// import { API_URL } from '@env'; // Import API_URL dari .env
+import axios from 'axios';
 
 const Splash = () => {
   const navigation = useNavigation(); 
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  
   let [fontsLoaded] = useFonts({
     Rubik_700Bold,
     Rubik_400Regular,
@@ -16,6 +21,22 @@ const Splash = () => {
   if (!fontsLoaded) {
     return null; // Or a loading indicator
   }
+
+  const handleLogin = async () => {
+    try {
+      const response = await axios.post(`${API_URL}/login`, {
+        email,
+        password
+      });
+      
+      if (response.data && response.data.token) {
+        Alert.alert("Login Berhasil!", "Anda berhasil masuk.");
+        navigation.navigate('Home');
+      }
+    } catch (error) {
+      Alert.alert("Login Gagal", "Periksa email dan kata sandi Anda.");
+    }
+  };
 
   return (
     <ImageBackground source={bglogin} style={styles.background}>
@@ -40,7 +61,8 @@ const Splash = () => {
             style={styles.input}
             placeholder='Your email'
             placeholderTextColor='#AFAEBE'
-            onChangeText={text => this.setState({ email: text })}
+            onChangeText={text => setEmail(text)}
+            value={email}
           />
         </View>
         <Text style={styles.label}>Password</Text>
@@ -51,13 +73,14 @@ const Splash = () => {
             placeholder='**********'
             placeholderTextColor='#AFAEBE'
             secureTextEntry
-            onChangeText={text => this.setState({ password: text })}
+            onChangeText={text => setPassword(text)}
+            value={password}
           />
         </View>
         <View style={styles.btnContainer}>        
           <TouchableOpacity
             style={styles.btn}
-            onPress={() => navigation.navigate('Home')}
+            onPress={handleLogin}
           >
             <Text style={styles.btnText}>Log in</Text>
           </TouchableOpacity>
@@ -80,7 +103,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: 50,
+    fontSize: 40,
     fontWeight: 'bold',
     color: 'white',
     textAlign: 'center',
@@ -94,7 +117,7 @@ const styles = StyleSheet.create({
   footer: {
     flex: 2,
     justifyContent: 'flex-start',
-    marginHorizontal: 60,
+    marginHorizontal: 50,
     paddingVertical: 40,
   },
   socialButtonsContainer: {
@@ -108,16 +131,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '40%', // Lebar tombol sosial
+    width: '40%',
     height: 50,
     padding: 10,
-    borderRadius: 12,
+    borderRadius: 50,
   },
   facebookButton: {
-    backgroundColor: '#317BEF', // Facebook warna latar belakang
+    backgroundColor: '#317BEF',
   },
   googleButton: {
-    backgroundColor: '#317BEF', // Google warna latar belakang
+    backgroundColor: '#317BEF',
     marginRight: 37,
   },
   socialButtonText: {
@@ -137,7 +160,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#AFAEBE',
-    borderRadius: 12,
+    borderRadius: 50,
     marginBottom: 25,
   },
   icon: {
@@ -147,20 +170,20 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 40,
     padding: 12,
-    borderRadius: 12,
+    borderRadius: 50,
   },
   btnContainer: {
     flex: 1,
     justifyContent: 'center',
   },
   btn: {
-    left:-19,
+    left: -19,
     width: '100%',
-    height: 50, // Sesuaikan tinggi tombol
+    height: 50,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#317BEF', // Sesuaikan warna latar belakang tombol
-    borderRadius: 14, // Sesuaikan sudut tombol
+    backgroundColor: '#317BEF',
+    borderRadius: 50,
     marginHorizontal: 20,
   },
   btnText: {
