@@ -37,8 +37,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     resizeMode: 'cover',
     alignItems: 'center',
-
-
   },
   img: {
     width: 269, // Tentukan ukuran gambar sesuai kebutuhan
@@ -65,13 +63,13 @@ const styles = StyleSheet.create({
   },
   btn: {
     position: 'absolute',
-    bottom: 53,
+    bottom: 83,
     width: 320,
-    height: 47, // Sesuaikan tinggi tombol
+    height: 50, // Sesuaikan tinggi tombol
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#317BEF', // Sesuaikan warna latar belakang tombol
-    borderRadius: 14, // Sesuaikan sudut tombol
+    borderRadius: 50, // Sesuaikan sudut tombol
   },
   btnText: {
     color: 'white',
