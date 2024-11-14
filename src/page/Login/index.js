@@ -4,14 +4,17 @@ import { useNavigation } from '@react-navigation/native';
 import bglogin from '../../assets/images/login.png'; 
 import { useFonts, Rubik_700Bold, Rubik_400Regular, Rubik_500Medium } from '@expo-google-fonts/rubik';
 import { AntDesign, FontAwesome } from '@expo/vector-icons';
-// import { API_URL } from '@env'; // Import API_URL dari .env
+import { API_URL } from '@env'; // Import API_URL dari .env
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
+
 
 const Splash = () => {
   const navigation = useNavigation(); 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
+  const [showPassword, setShowPassword] = useState(false);
+
   let [fontsLoaded] = useFonts({
     Rubik_700Bold,
     Rubik_400Regular,
@@ -24,19 +27,42 @@ const Splash = () => {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post(`${API_URL}/login`, {
-        email,
-        password
-      });
+      const response = await axios.post(`${API_URL}/login`, { email, password });
       
-      if (response.data && response.data.token) {
+      const { data } = response;
+      if (data && data.data && data.data.token && data.data.user && data.data.user.name) {
+        const token = data.data.token;
+        const userName = data.data.user.name;
+        
+        // Simpan token dan nama pengguna di AsyncStorage
+        await AsyncStorage.setItem('token', token);
+        await AsyncStorage.setItem('userName', userName);
+
         Alert.alert("Login Berhasil!", "Anda berhasil masuk.");
         navigation.navigate('Home');
+      } else {
+        console.log("Login response without token:", response.data);
+        Alert.alert("Login Gagal", "Login berhasil tetapi tidak ada token.");
       }
     } catch (error) {
-      Alert.alert("Login Gagal", "Periksa email dan kata sandi Anda.");
+      if (error.response) {
+        // The request was made, and the server responded with a status code outside the 2xx range
+        console.log("Error response data:", error.response.data);
+        console.log("Error response status:", error.response.status);
+        console.log("Error response headers:", error.response.headers);
+        Alert.alert("Login Gagal", error.response.data.message || "Periksa email dan kata sandi Anda.");
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.log("Error request:", error.request);
+        Alert.alert("Login Gagal", "Tidak ada respon dari server.");
+      } else {
+        // Something happened in setting up the request
+        console.log("Error message:", error.message);
+        Alert.alert("Login Gagal", "Terjadi kesalahan pada konfigurasi request.");
+      }
     }
   };
+  
 
   return (
     <ImageBackground source={bglogin} style={styles.background}>
@@ -72,10 +98,13 @@ const Splash = () => {
             style={styles.input}
             placeholder='**********'
             placeholderTextColor='#AFAEBE'
-            secureTextEntry
+            secureTextEntry={!showPassword}
             onChangeText={text => setPassword(text)}
             value={password}
           />
+          <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+            <FontAwesome name={showPassword ? 'eye' : 'eye-slash'} size={20} color="#AFAEBE" />
+          </TouchableOpacity>
         </View>
         <View style={styles.btnContainer}>        
           <TouchableOpacity
@@ -191,6 +220,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 18,
     fontFamily: 'Rubik_500Medium',
+  },
+  eyeIcon: {
+    marginRight: 10,
   },
 });
 

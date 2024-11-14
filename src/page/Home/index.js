@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Image, Text, StyleSheet, ImageBackground, Dimensions, ScrollView,TouchableOpacity } from "react-native";
 import { ImgHeader, User, Menu } from "../../assets";
 import ButtonIconGrid from '../../components/ButtonIcon/management'; // Pastikan jalur ini benar
 import ButtonIconGridSchedul from '../../components/ButtonIcon/schedule'; 
 import ButtonIconGridProgress from '../../components/ButtonIcon/progress'; 
-import { WARNA_ABU_ABU } from '../../utils';
 import { useNavigation } from '@react-navigation/native'; // Menggunakan navigasi
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 
 const Home = () => {
   const data = [
@@ -18,7 +18,19 @@ const Home = () => {
     { title: 'Tugas Proyek' },
   ];
 
+const [userName, setUserName] = useState(''); // State untuk menyimpan nama pengguna
 const navigation = useNavigation(); // Hook navigasi untuk mengarahkan ke profil
+
+useEffect(() => {
+  const loadUserName = async () => {
+    const storedUserName = await AsyncStorage.getItem('userName');
+    if (storedUserName) {
+      setUserName(storedUserName);
+    }
+  };
+  loadUserName();
+}, []);
+
 const goToProfile = () => {
   navigation.navigate('Profile'); // Navigasi ke halaman profil, pastikan route 'Profile' sudah diatur
 };
@@ -38,7 +50,7 @@ const handleSeeAll = (menuType) => {
           <Image source={User} style={styles.user} />
           <View style={styles.hello}>
             <Text style={styles.selamat}>Selamat Datang, </Text>
-            <Text style={styles.username}>Yamin</Text>
+            <Text style={styles.username}> {userName} </Text> 
           </View>
           <TouchableOpacity onPress={goToProfile}>
             <Image source={Menu} style={styles.menu} />
