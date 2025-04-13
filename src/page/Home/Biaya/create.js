@@ -1,90 +1,263 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Dimensions, ImageBackground, FlatList } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  Button,
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Dimensions,
+  ImageBackground,
+} from 'react-native';
 import { FontAwesome } from '@expo/vector-icons'; 
 import { useNavigation } from '@react-navigation/native'; 
-import DropDownPicker from 'react-native-dropdown-picker'; 
+import { SelectList } from 'react-native-dropdown-select-list';
+import { API_URL } from '@env'; // Ensure .env is properly configured
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Toast from 'react-native-toast-message';
 
 const BiayaImage = require('../../../assets/images/bg-img-top.png');
+
+const CustomInput = ({ label, placeholder, value, onChangeText }) => (
+  <View>
+    <Text style={styles.label}>{label}</Text>
+    <TextInput
+      style={styles.input}
+      placeholder={placeholder}
+      value={value}
+      onChangeText={onChangeText}
+    />
+  </View>
+);
+
+const CustomSelectList = ({ label, data, selectedValue, setSelected }) => (
+<View>
+  <Text style={styles.label}>{label}</Text>
+  <SelectList
+    setSelected={setSelected}
+    data={data}
+    save="value"
+    searchPlaceholder="Cari..."
+    boxStyles={styles.selectListBox}
+    dropdownStyles={styles.selectListDropdown}
+    selected={selectedValue} // Pastikan nilai terpilih ditampilkan
+  />
+</View>
+);
+
+const CustomSelectList1 = ({ label, data, selectedValue, setSelected }) => (
+  <View>
+    <Text style={styles.label}>{label}</Text>
+    <SelectList
+      setSelected={setSelected}
+      data={data}
+      save="key"
+      searchPlaceholder="Cari..."
+      boxStyles={styles.selectListBox}
+      dropdownStyles={styles.selectListDropdown}
+      selected={selectedValue} // Pastikan nilai terpilih ditampilkan
+    />
+  </View>
+  );
+
 
 export default function CreateBiaya() {
   const navigation = useNavigation();
 
   const [formData, setFormData] = useState({
-    BiayaName: '',
-    location: '',
-    pemberiTugas: '',
-    konsultanMK: '',
-    kontraktor: '',
-    spmk: '',
-    kontrak: '',
-    nilaiKontrak: '',
-    addendum2: '',
-    addendum4: '',
+    biayaNama: '',
+    satuan: '',
+    volume: '',
+    project_id: '',
+    kategori: '',
+    harga: '',
   });
 
-  const [open, setOpen] = useState(false);
-  const [pemberiTugas, setPemberiTugas] = useState(null);
-  const [items, setItems] = useState([
-    { label: 'PT. Adhi Karya', value: 'adhi_karya' },
-    { label: 'PT. Waskita Karya', value: 'waskita_karya' },
-    { label: 'PT. Wijaya Karya', value: 'wijaya_karya' },
-    { label: 'PT. Hutama Karya', value: 'hutama_karya' },
-    { label: 'PT. Pembangunan Perumahan', value: 'pembangunan_perumahan' },
-  ]);
+  
+  const [proyekOptions, setProyekOptions] = useState([]);
+  const [kategoriOption, setKategori] = useState([
+    { label: 'Material', value: 'Material' },
+    { label: 'Alat', value: 'Alat' },
+    { label: 'Pekerjaan', value: 'Pekerjaan' },
+    { label: 'Upah', value: 'Upah' },
+]);
 
   const handleInputChange = (field, value) => {
     setFormData({ ...formData, [field]: value });
   };
+  // Fetch data for proyekType and kontraktor
+  useEffect(() => {
 
-  const renderInput = (label, placeholder, field) => (
-    <>
-      <Text style={styles.label}>{label}</Text>
-      <TextInput
-        style={styles.input}
-        placeholder={placeholder}
-        value={formData[field]}
-        onChangeText={text => handleInputChange(field, text)}
-      />
-    </>
-  );
+    const fetchData = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        if (!token) {
+          Toast.show({
+            type: 'error',
+            text1: 'Kesalahan Autentikasi',
+            text2: 'Token tidak ditemukan. Harap login kembali.',
+          });
+          navigation.navigate('Login');
+          return;
+        }
+
+        const proyekResponse = await axios.get(`${API_URL}/projects`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        // Set options for SelectList
+        setProyekOptions(
+          proyekResponse.data.data.map((item) => ({ key: item.id, value: item.project_name }))
+        );
+
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        Toast.show({
+          type: 'error',
+          text1: 'Gagal Memuat Data',
+          text2: 'Terjadi kesalahan saat mengambil data dari server.',
+        });
+      }
+    };
+
+    fetchData();
+  }, []);
+  
+
+  // Fungsi untuk menyimpan data proyek
+  const handleSave = async () => {
+    console.log('Data Form:', formData);
+  
+    if (!formData.project_id || !formData.biayaNama || !formData.satuan) {
+      Toast.show({
+        type: 'error',
+        position: 'top',
+        text1: 'Gagal menyimpan biaya items',
+        text2: 'Pastikan semua kolom yang wajib diisi sudah terisi.',
+      });
+      return;
+    }
+    if (!formData.kategori) {
+      Toast.show({
+          type: 'error',
+          text1: 'Gagal menyimpan items',
+          text2: 'Kategori wajib diisi.',
+      });
+      return;
+  }
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        console.error('Token tidak ditemukan!');
+        Toast.show({
+          type: 'error',
+          position: 'top',
+          text1: 'Kesalahan Autentikasi',
+          text2: 'Token tidak ditemukan. Harap login kembali.',
+        });
+        navigation.navigate('Login');
+        return;
+      }
+  
+      const formDataToSend = {
+        title: formData.biayaNama,
+        unit: formData.satuan,
+        volume: parseFloat(formData.volume),
+        project_id: parseInt(formData.project_id, 10),
+        price: parseFloat(formData.harga),
+        kategori: formData.kategori,
+      };
+
+      console.log('Data yang dikirim:', formDataToSend);
+  
+      const response = await axios.post(`${API_URL}/items/store`, formDataToSend, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      if (response.status === 201) {
+        Toast.show({
+          type: 'success',
+          position: 'top',
+          text1: 'Biaya items berhasil disimpan!',
+          text2: 'Data items telah berhasil ditambahkan.',
+        });
+        navigation.navigate('Biaya');
+      } else {
+        throw new Error('Gagal menyimpan items');
+      }
+    } catch (error) {
+      console.error('Error menyimpan data:', error.response?.data || error.message);
+      Toast.show({
+        type: 'error',
+        position: 'top',
+        text1: 'Gagal menyimpan items',
+        text2: error.response?.data?.message || 'Terjadi kesalahan saat menyimpan items.',
+      });
+    }
+  };
+  
 
   return (
     <View style={styles.container}>
-      <ImageBackground source={BiayaImage} style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate('Proyek')}>
-          <FontAwesome name="chevron-left" size={24} color="white" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Buat Schedule</Text>
-      </ImageBackground>
+      <ScrollView showsVerticalScrollIndicator={false}
+      contentContainerStyle={styles.scrollContainer}
+      >
+        <ImageBackground source={BiayaImage} style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate('Biaya')}>
+            <FontAwesome name="chevron-left" size={24} color="white" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Biaya Items</Text>
+        </ImageBackground>
 
-      <View style={styles.formContainer}>
-        {renderInput('Start Date', 'Masukkan Nama Proyek', 'BiayaName')}
-        {renderInput('End Date', 'Masukkan Lokasi', 'location')}
+        <View style={styles.formContainer}>
+          <CustomSelectList1
+            label="Proyek"
+            setSelected={(key) => handleInputChange('project_id', key)}
+            data={proyekOptions}
+            placeholder="Pilih proyek..."
+            save="key"
+          />          
+          <CustomInput
+              label="Nama Items"
+              placeholder="Masukkan Nama Items"
+              value={formData.biayaNama}
+              onChangeText={(text) => handleInputChange('biayaNama', text)}
+            />
+          <CustomInput
+              label="Volume"
+              placeholder="Volume"
+              value={formData.volume}
+              onChangeText={(text) => handleInputChange('volume', text)}
+            />
+            <CustomInput
+              label="Satuan"
+              placeholder="Satuan"
+              value={formData.satuan}
+              onChangeText={(text) => handleInputChange('satuan', text)}
+            />
 
-        <Text style={styles.label}>Proyek</Text>
-        <DropDownPicker
-          open={open}
-          value={pemberiTugas}
-          items={items}
-          setOpen={setOpen}
-          setValue={setPemberiTugas}
-          setItems={setItems}
-          placeholder="Proyek"
-          searchable={true}
-          searchPlaceholder="Cari Pemberi Tugas..."
-          style={styles.dropdown}
-          dropDownContainerStyle={styles.dropdownContainer}
-          onChangeValue={(value) => handleInputChange('pemberiTugas', value)}
-          listMode="FLATLIST"
-        />
-
-        {renderInput('Assign', 'Masukkan Konsultan MK', 'konsultanMK')}
-        {renderInput('Description', 'Masukkan Kontraktor', 'kontraktor')}
-
-        <TouchableOpacity style={styles.saveButton}>
-          <Text style={styles.saveButtonText}>Save</Text>
-        </TouchableOpacity>
-      </View>
+            <CustomSelectList
+                label="Kategori"
+                data={kategoriOption}
+                selectedValue={formData.kategori} // Nilai terpilih
+                setSelected={(value) => handleInputChange('kategori', value)}
+            />         
+            <CustomInput
+              label="Harga"
+              placeholder="Harga"
+              value={formData.harga}
+              onChangeText={(text) => handleInputChange('harga', text)}
+            />
+          <TouchableOpacity style={styles.saveButton} onPress={handleSave}> 
+            <Text style={styles.saveButtonText}>Save</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </View>
   );
 }
@@ -120,25 +293,18 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     top: -50,
   },
-  dropdown: {
+  mb_15: {
+    marginBottom: 15,
+   },
+  selectListBox: {
     backgroundColor: '#F1F3FA',
     borderColor: '#C4C4C4',
-    borderRadius: 30,
-    fontSize: 12,
-    color: '#555555',
+    borderRadius: 10,
     marginBottom: 15,
   },
-  dropdownContainer: {
+  selectListDropdown: {
+    backgroundColor: '#FFF',
     borderColor: '#C4C4C4',
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
-    borderBottomLeftRadius: 5,
-    borderBottomRightRadius: 5,
-    overflow: 'hidden',
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    marginBottom: 15,
-    fontSize: 12,
   },
   label: {
     fontSize: 12,
@@ -147,15 +313,21 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   input: {
-    backgroundColor: '#F1F3FA',
+    backgroundColor: '#fff',
     borderColor: '#C4C4C4',
     borderWidth: 1,
-    borderRadius: 50,
+    borderRadius: 10,
     paddingHorizontal: 15,
     paddingVertical: 10,
     marginBottom: 15,
     fontSize: 12,
     color: '#555555',
+  },
+  label: {
+    fontSize: 12,
+    color: '#002D76',
+    fontWeight: 'bold',
+    marginBottom: 10,
   },
   saveButton: {
     backgroundColor: '#3576F7',

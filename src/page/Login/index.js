@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { SafeAreaView, View, Text, TextInput, StyleSheet, ImageBackground, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native'; 
 import bglogin from '../../assets/images/login.png'; 
@@ -6,14 +6,15 @@ import { useFonts, Rubik_700Bold, Rubik_400Regular, Rubik_500Medium } from '@exp
 import { AntDesign, FontAwesome } from '@expo/vector-icons';
 import { API_URL } from '@env'; // Import API_URL dari .env
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
+import AsyncStorage from '@react-native-async-storage/async-storage'; 
+import Toast from 'react-native-toast-message';
 
-
-const Splash = () => {
+const Login = () => {
   const navigation = useNavigation(); 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // Add state to track login status
 
   let [fontsLoaded] = useFonts({
     Rubik_700Bold,
@@ -21,44 +22,97 @@ const Splash = () => {
     Rubik_500Medium
   });
 
+  useEffect(() => {
+
+    // Check if the user is already logged in
+    const checkLoginStatus = async () => {
+      const token = await AsyncStorage.getItem('token');
+      if (token) {
+        setIsLoggedIn(true); // If token exists, user is logged in
+      }
+    };
+    checkLoginStatus();
+  }, []);
+
   if (!fontsLoaded) {
     return null; // Or a loading indicator
   }
 
+
   const handleLogin = async () => {
+    // Validasi untuk memastikan email dan password tidak kosong
+    if (!email || !password) {
+      Toast.show({
+        type: 'error',
+        position: 'top',
+        text1: 'Login Gagal',
+        text2: 'Email dan password tidak boleh kosong.',
+      });
+      return;
+    }
+    
     try {
-      const response = await axios.post(`${API_URL}/login`, { email, password });
-      
+      const response = await axios.post(
+        `${API_URL}/login`, 
+        { email, password },
+        { headers: { 'Content-Type': 'application/json' } }  // Pastikan content-type adalah JSON
+      );
+  
       const { data } = response;
       if (data && data.data && data.data.token && data.data.user && data.data.user.name) {
         const token = data.data.token;
         const userName = data.data.user.name;
-        
+        const id = data.data.user.id;
         // Simpan token dan nama pengguna di AsyncStorage
         await AsyncStorage.setItem('token', token);
         await AsyncStorage.setItem('userName', userName);
+        // Simpan inspektor_id saat login berhasil
+        await AsyncStorage.setItem('inspektor_id', id.toString()); // Konversi ke string
 
-        Alert.alert("Login Berhasil!", "Anda berhasil masuk.");
+        Toast.show({
+          type: 'success',
+          position: 'top',
+          text1: 'Login Berhasil!',
+          text2: 'Anda berhasil masuk.',
+        });
+
         navigation.navigate('Home');
+        // console.log('isLoggedIn:', isLoggedIn);
+        // navigation.navigate(isLoggedIn ? 'Home' : 'Login');
       } else {
         console.log("Login response without token:", response.data);
-        Alert.alert("Login Gagal", "Login berhasil tetapi tidak ada token.");
+        Toast.show({
+          type: 'error',
+          position: 'top',
+          text1: 'Login Gagal',
+          text2: 'Login berhasil tetapi tidak ada token.',
+        });
       }
     } catch (error) {
       if (error.response) {
-        // The request was made, and the server responded with a status code outside the 2xx range
         console.log("Error response data:", error.response.data);
-        console.log("Error response status:", error.response.status);
-        console.log("Error response headers:", error.response.headers);
-        Alert.alert("Login Gagal", error.response.data.message || "Periksa email dan kata sandi Anda.");
+        Toast.show({
+          type: 'error',
+          position: 'top',
+          text1: 'Login Gagal',
+          text2: error.response.data.message || "Periksa email dan kata sandi Anda.",
+        });
       } else if (error.request) {
-        // The request was made but no response was received
         console.log("Error request:", error.request);
-        Alert.alert("Login Gagal", "Tidak ada respon dari server.");
+        Toast.show({
+          type: 'error',
+          position: 'top',
+          text1: 'Login Gagal',
+          text2: 'Tidak ada respon dari server.',
+        });
       } else {
-        // Something happened in setting up the request
         console.log("Error message:", error.message);
-        Alert.alert("Login Gagal", "Terjadi kesalahan pada konfigurasi request.");
+        Toast.show({
+          type: 'error',
+          position: 'top',
+          text1: 'Login Gagal',
+          text2: 'Terjadi kesalahan pada konfigurasi request.',
+        });
       }
     }
   };
@@ -226,4 +280,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Splash;
+export default Login;

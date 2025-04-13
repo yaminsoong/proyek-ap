@@ -1,0 +1,31 @@
+Intall expo react native dari Proyek
+dengan beda versi node.js
+
+Pertama hapus install expo global
+- @npm uninstall -g expo-cli
+ di cmd luar proyek
+//
+dan di dalam proyek install expo terbaru
+- npm install expo@latest
+- npm update
+- npm install expo
+- run expo start
+
+tambahkan 
+npm install --save react-native-snap-carousel
+
+
+Build APK=
+- eas build -p android
+- npm install -g eas-cli
+- eas login
+- eas build:configure
+  ganti eas.json typebuld:
+    "production": {
+    "android": {
+        "buildType": "apk"
+    },
+    "autoIncrement": true
+    }
+
+- eas build -p android --profile production

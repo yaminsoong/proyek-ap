@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { View, Image, Text, StyleSheet, ImageBackground, Dimensions, ScrollView,TouchableOpacity } from "react-native";
 import { ImgHeader, User, Menu } from "../../assets";
+import { useFonts, Rubik_700Bold, Rubik_400Regular, Rubik_500Medium } from '@expo-google-fonts/rubik';
 import ButtonIconGrid from '../../components/ButtonIcon/management'; // Pastikan jalur ini benar
 import ButtonIconGridSchedul from '../../components/ButtonIcon/schedule'; 
 import ButtonIconGridProgress from '../../components/ButtonIcon/progress'; 
 import { useNavigation } from '@react-navigation/native'; // Menggunakan navigasi
 import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
+
 
 const Home = () => {
   const data = [
@@ -18,30 +20,45 @@ const Home = () => {
     { title: 'Tugas Proyek' },
   ];
 
-const [userName, setUserName] = useState(''); // State untuk menyimpan nama pengguna
-const navigation = useNavigation(); // Hook navigasi untuk mengarahkan ke profil
+  let [fontsLoaded] = useFonts({
+    Rubik_700Bold,
+    Rubik_400Regular,
+    Rubik_500Medium
+  });
 
-useEffect(() => {
-  const loadUserName = async () => {
-    const storedUserName = await AsyncStorage.getItem('userName');
-    if (storedUserName) {
-      setUserName(storedUserName);
-    }
+  const [userName, setUserName] = useState(''); // State untuk menyimpan nama pengguna
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // Add state to track login status
+  const navigation = useNavigation(); // Hook navigasi untuk mengarahkan ke profil
+
+  useEffect(() => {
+    const getUserData = async () => {
+      const gettoken = await AsyncStorage.getItem('token');
+      const token = gettoken;
+      await AsyncStorage.setItem('token', token);
+      const userName = await AsyncStorage.getItem('userName');
+      setUserName(userName);
+      console.log('Token di Home:', token);
+      // console.log('User Name di Home:', userName);
+    };
+    getUserData();
+  }, []);
+
+  const goToProfile = () => {
+    navigation.navigate('Profile'); // Navigasi ke halaman profil, pastikan route 'Profile' sudah diatur
   };
-  loadUserName();
-}, []);
+  
+  const goToProyek = () => {
+    navigation.navigate('Proyek'); // Navigasi ke halaman Proyek, pastikan route 'Proyek' sudah diatur
+  };
 
-const goToProfile = () => {
-  navigation.navigate('Profile'); // Navigasi ke halaman profil, pastikan route 'Profile' sudah diatur
-};
-const goToProyek = () => {
-  navigation.navigate('Proyek'); // Navigasi ke halaman Proyek, pastikan route 'Proyek' sudah diatur
-};
+  const handleSeeAll = (menuType) => {
+    // Logika navigasi ke menu "All" berdasarkan jenis menu
+    alert(`See all ${menuType}`); // Ganti dengan navigasi ke layar yang sesuai
+  };
 
-const handleSeeAll = (menuType) => {
-  // Logika navigasi ke menu "All" berdasarkan jenis menu
-  alert(`See all ${menuType}`); // Ganti dengan navigasi ke layar yang sesuai
-};
+  if (!fontsLoaded) {
+    return null; // Or a loading indicator
+  }
 
   return (
     <View style={styles.page}>
@@ -50,7 +67,7 @@ const handleSeeAll = (menuType) => {
           <Image source={User} style={styles.user} />
           <View style={styles.hello}>
             <Text style={styles.selamat}>Selamat Datang, </Text>
-            <Text style={styles.username}> {userName} </Text> 
+            <Text style={styles.username}> {userName} </Text>
           </View>
           <TouchableOpacity onPress={goToProfile}>
             <Image source={Menu} style={styles.menu} />
@@ -60,20 +77,14 @@ const handleSeeAll = (menuType) => {
           <View style={styles.cardMenu}>
             <View style={styles.menuHeader}>
               <Text style={styles.titleMenu}>Management</Text>
-              {/* <TouchableOpacity style={styles.seeAllButton} onPress={() => handleSeeAll('Management')}>
-                <Text style={styles.seeAllText}>See All</Text>
-              </TouchableOpacity> */}
             </View>
-              <ButtonIconGrid data={data} />
+            <ButtonIconGrid data={data} />
           </View>
         </View>
         <View style={styles.body}>
           <View style={styles.cardMenu}>
             <View style={styles.menuHeader}>
               <Text style={styles.titleMenu}>Schedule</Text>
-              {/* <TouchableOpacity style={styles.seeAllButton} onPress={() => handleSeeAll('Management')}>
-                <Text style={styles.seeAllText}>See All</Text>
-              </TouchableOpacity> */}
             </View>
             <ButtonIconGridSchedul data={data} />
           </View>
@@ -89,11 +100,11 @@ const handleSeeAll = (menuType) => {
             <ButtonIconGridProgress data={data} />
           </View>
         </View>
-
       </ScrollView>
     </View>
   );
 };
+
 
 export default Home;
 

@@ -1,34 +1,59 @@
 {
-    "expo": {
-      "name": "NamaProyekAnda",
-      "slug": "nama-proyek-anda",
-      "sdkVersion": "51.0.0",
-      "platforms": ["ios", "android", "web"],
-      "version": "1.0.0",
-      "orientation": "portrait",
-      "icon": "./src/assets/icon/google.png",
-      "splash": {
-        "image": "./src/assets/icon/fb.png",
-        "resizeMode": "contain",
+  "expo": {
+    "name": "Proyek Management",
+    "slug": "proyek-management",
+    "version": "1.0.0",
+    "sdkVersion": "52.0.0",
+    "jsEngine": "hermes",
+    "experimental": {
+      "newArchEnabled": true
+    },
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "orientation": "portrait",
+    "icon": "./src/assets/icon/adimix.png",
+    "splash": {
+      "image": "./src/assets/icon/adimixL.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./src/assets/icon/adimix.png",
         "backgroundColor": "#ffffff"
       },
-      "updates": {
-        "fallbackToCacheTimeout": 0
-      },
-      "assetBundlePatterns": ["**/*"],
-      "ios": {
-        "supportsTablet": true
-      },
-      "android": {
-        "adaptiveIcon": {
-          "foregroundImage": "./src/assets/user.png",
-          "backgroundColor": "#ffffff",
-          "jsEngine": "jsc"  
-        }
-      },
-      "web": {
-        "favicon": "./src/assets/favicon.png"
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ],
+      "package": "com.anonymous.proyekmanagement"
+    },
+    "web": {
+      "favicon": "./src/assets/icon/adimix.png"
+    },
+    "plugins": [
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "40eee9fa-565f-4054-be33-a8001a969009"
       }
     }
   }
-  
+}

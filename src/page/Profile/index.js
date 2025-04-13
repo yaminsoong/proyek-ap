@@ -1,10 +1,26 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Button } from 'react-native';
+import { useNavigation } from '@react-navigation/native'; // Import hook dari React Navigation
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Pastikan AsyncStorage terimport
+import Toast from 'react-native-toast-message'; // Pastikan Toast terimport dengan benar
 
-const Profile = () => {
+const Profile = ({ navigation }) => {
+  const handleLogout = async () => {
+    await AsyncStorage.removeItem('token'); // Menghapus token dari AsyncStorage
+    Toast.show({
+      type: 'info',
+      position: 'top',
+      text1: 'Logout Berhasil',
+      text2: 'Anda telah keluar.',
+    });
+    navigation.navigate('Login');
+    
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>This is the Profile Screen</Text>
+      <Button title="Logout" onPress={handleLogout} />
+      <Text style={styles.text}>Welcome to the Profile Page!</Text> 
     </View>
   );
 };
@@ -20,5 +36,6 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 18,
     fontWeight: 'bold',
+    marginTop: 20, // Menambah jarak antara tombol dan teks
   },
 });
