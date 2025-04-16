@@ -28,4 +28,5 @@ Build APK=
     "autoIncrement": true
     }
 
+# Setelah itu, jalankan build:
 - eas build -p android --profile production
